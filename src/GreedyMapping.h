@@ -2,31 +2,38 @@
 #define GREEDY_MAPPING_H 
 
 #include "StaticMappingAlgorithm.h"
+#include "CommTime.h"
 
 #include <graph/Graph.h>
 
 #include <vector>
-
-using NetworKit::node;
-using NetworKit::Graph;
-using NetworKit::index;
+#include <limits>
 
 namespace StaticMapping {
 
-class GreedyMapping : StaticMapping {
+
+class GreedyMapping : public StaticMapping {
 public: 
-    GreedyMapping(const Graph&, const Graph&);
+    GreedyMapping(const NetworKit::Graph&, const NetworKit::Graph&);
     void run();
-    
+	
+	std::vector<NetworKit::index> getMapping() const;
+	CommTime getCommTime() const;
 
+	bool hasRun() const;
+	
 private:
-    const Graph& communicationGraph;
-    const Graph& processorGraph;
-    
-    std::vector<node> sum_c;
-    std::vector<node> sum_p;
-    
+    const NetworKit::Graph& communicationGraph;
+    const NetworKit::Graph& processorGraph;
 
+	CommTime commTimes;
+	
+    std::vector<int> sum_c;
+    std::vector<int> sum_p;
+
+	std::vector<NetworKit::index> mapping;
+
+	bool hasrun;
 };
 
 } // namespace

@@ -18,9 +18,36 @@ link_directories(${NETWORKIT_LIBRARY_DIR})
 include_directories(${NETWORKIT_INCLUDE_DIR})
 
 ################################################################################
+# Find GoogleTest                                                              #
+################################################################################
+enable_testing()
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+
+################################################################################
 
 message(STATUS "COMPILE COMMAND: ${CMAKE_CXX_FLAGS}")
 
-add_executable(demo src/main.cpp)
+set (SOURCE_FILES
+  src/main.cpp
+  src/CommTime.cpp
+  src/GreedyMapping.cpp
+  src/Benchmark.cpp
+  src/InitialMapping.cpp
+)
+
+set (TEST_FILES
+  src/CommTime.cpp
+  src/GreedyMapping.cpp
+  src/test/test.cpp
+  src/test/CommTimeTest.cpp
+  src/test/GreedyMappingTest.cpp
+)
+
+add_executable(demo ${SOURCE_FILES})
 target_link_libraries(demo NetworKit-Core-Opt)
 
+add_executable(testRunner ${TEST_FILES})
+target_link_libraries(testRunner ${GTEST_BOTH_LIBRARIES})
+target_link_libraries(testRunner NetworKit-Core-Opt)
+add_test(testRunner testRunner)

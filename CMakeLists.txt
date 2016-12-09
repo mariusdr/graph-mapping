@@ -25,6 +25,12 @@ find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
 ################################################################################
+# Find Boost Program_options                                                   #
+################################################################################
+find_package(Boost REQUIRED program_options)
+include_directories(${Boost_INCLUDE_DIRS})
+
+################################################################################
 
 message(STATUS "COMPILE COMMAND: ${CMAKE_CXX_FLAGS}")
 
@@ -34,6 +40,7 @@ set (SOURCE_FILES
   src/GreedyMapping.cpp
   src/Benchmark.cpp
   src/InitialMapping.cpp
+  src/RandomMapping.cpp
 )
 
 set (TEST_FILES
@@ -44,8 +51,8 @@ set (TEST_FILES
   src/test/GreedyMappingTest.cpp
 )
 
-add_executable(demo ${SOURCE_FILES})
-target_link_libraries(demo NetworKit-Core-Opt)
+add_executable(computeMapping ${SOURCE_FILES})
+target_link_libraries(computeMapping NetworKit-Core-Opt ${Boost_PROGRAM_OPTIONS_LIBRARY})
 
 add_executable(testRunner ${TEST_FILES})
 target_link_libraries(testRunner ${GTEST_BOTH_LIBRARIES})

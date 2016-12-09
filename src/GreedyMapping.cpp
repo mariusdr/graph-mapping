@@ -1,5 +1,4 @@
 #include "GreedyMapping.h"
-#include "Log.h"
 
 #include <algorithm>
 #include <assert.h>
@@ -16,12 +15,21 @@ namespace StaticMapping {
 #define COMM_NODE_ASSIGNED -1
 
 GreedyMapping::GreedyMapping(const NetworKit::Graph& cg, const NetworKit::Graph& pg): 
-    communicationGraph(cg), processorGraph(pg),
+	communicationGraph(cg), processorGraph(pg),
 	commTimes(CommTime(pg)),
-    sum_c(std::vector<int>(cg.numberOfNodes(), 0)),
-    sum_p(std::vector<int>(pg.numberOfNodes(), 1)),
+	sum_c(std::vector<int>(cg.numberOfNodes(), 0)),
+	sum_p(std::vector<int>(pg.numberOfNodes(), 1)),
 	mapping(std::vector<NetworKit::index>(cg.numberOfNodes(), 0)),
 	hasrun(false)
+{}
+
+GreedyMapping::GreedyMapping(const GreedyMapping& rhs):
+	communicationGraph(rhs.communicationGraph), processorGraph(rhs.processorGraph),
+	commTimes(rhs.commTimes),
+	sum_c(rhs.sum_c),
+	sum_p(rhs.sum_p),
+	mapping(rhs.mapping),
+	hasrun(rhs.hasrun)
 {}
 
 inline NetworKit::edgeweight totalCommVolume(const NetworKit::Graph& communicationGraph, NetworKit::node u) {
@@ -39,7 +47,7 @@ inline double totalCommTime(const NetworKit::Graph& processorGraph, const CommTi
 }
 
 inline NetworKit::node initialCommNode(const NetworKit::Graph& communicationGraph) {
-	NetworKit::node vc0;
+	NetworKit::node vc0 = 0;
 	NetworKit::edgeweight maxCommVolume = 0;
 	for (auto& v: communicationGraph.nodes()) {
 		auto cv = totalCommVolume(communicationGraph, v);
@@ -52,7 +60,7 @@ inline NetworKit::node initialCommNode(const NetworKit::Graph& communicationGrap
 }
 
 inline NetworKit::node initialProcessorNode(const NetworKit::Graph& processorGraph, const CommTime& commTimes) {
-	NetworKit::node vp0;
+	NetworKit::node vp0 = 0;
 	double minCommTime = MAX_DOUBLE;
 	for (auto& v: processorGraph.nodes()) {
 		auto ct = totalCommTime(processorGraph, commTimes, v);
@@ -68,7 +76,7 @@ inline NetworKit::node pickMaxNode(const std::vector<int>& sum) {
 	NetworKit::node max_node = 0;
 	int max_val = -1;
 
-	for (NetworKit::index i = 0; i < sum.size(); i++) {
+	for (size_t i = 0; i < sum.size(); i++) {
 		if (sum[i] > max_val) {
 			max_val = sum[i];
 			max_node = i;
@@ -81,7 +89,7 @@ inline NetworKit::node pickMinNode(const std::vector<int>& sum) {
 	NetworKit::node min_node = 0;
 	int min_val = MAX_INT;
 
-	for (NetworKit::index i = 0; i < sum.size(); i++) {
+	for (size_t i = 0; i < sum.size(); i++) {
 		if (sum[i] < min_val) {
 			min_val = sum[i];
 			min_node = i;
@@ -92,18 +100,19 @@ inline NetworKit::node pickMinNode(const std::vector<int>& sum) {
 
 void GreedyMapping::run() { 
 	assertRequirements(communicationGraph, processorGraph);
+
 	// compute communication time between processor nodes
 	commTimes.run();
-
+	
 	NetworKit::node vci = initialCommNode(communicationGraph);
 	NetworKit::node vpi = initialProcessorNode(processorGraph, commTimes);
 
 	// initial mapping
 	mapping[vci] = vpi;
 	
-	LOG("Map CommNode " << vci << " -> ProcessorNode " << vpi << " || (INITIAL)");
+	//LOG("Map CommNode " << vci << " -> ProcessorNode " << vpi << " || (INITIAL)");
 
-	for (NetworKit::index i = 0; i < communicationGraph.numberOfNodes() - 1; i++) {
+	for (size_t i = 0; i < communicationGraph.numberOfNodes() - 1; ++i) {
 		// mark nodes as assigned
 		sum_c[vci] = COMM_NODE_ASSIGNED;
 		sum_p[vpi] = PROCESSOR_ASSIGNED;
@@ -116,7 +125,8 @@ void GreedyMapping::run() {
 		}
 		NetworKit::node vci_next = pickMaxNode(sum_c);
 
-		for (NetworKit::index j = 0; j < processorGraph.numberOfNodes(); j++) {
+		#pragma omp parallel for
+		for (size_t j = 0; j < processorGraph.numberOfNodes(); ++j) {
 			if (sum_p[j] != PROCESSOR_ASSIGNED) {
 				// j is not assigned
 				sum_p[j] = 0;
@@ -137,8 +147,8 @@ void GreedyMapping::run() {
 		// set mapping 
 		mapping[vci_next] = vpi_next;
 
-		LOG("Map CommNode " << vci_next << " -> ProcessorNode " << vpi_next
-			<< " || " << "sum_c = " << sum_c[vci_next] << " ; sum_p = " << sum_p[vpi_next]);
+		//LOG("Map CommNode " << vci_next << " -> ProcessorNode " << vpi_next
+		//	<< " || " << "sum_c = " << sum_c[vci_next] << " ; sum_p = " << sum_p[vpi_next]);
 
 		//assert(sum_c[vci_next] == *std::max_element(sum_c.begin(), sum_c.end()));
 		//assert(sum_p[vpi_next] == *std::min_element(sum_p.begin(), sum_p.end()));
@@ -161,6 +171,4 @@ bool GreedyMapping::hasRun() const {
 	return hasrun;
 }
 
-
 } // namespace
-

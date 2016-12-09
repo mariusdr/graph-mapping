@@ -6,9 +6,12 @@
 #include <graph/Graph.h>
 #include <Globals.h>
 
+#include <iostream>
+
 #include "CommTime.h"
 
 namespace StaticMapping {
+
 
 class StaticMapping {
 public:

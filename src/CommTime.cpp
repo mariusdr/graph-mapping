@@ -90,6 +90,11 @@ CommTime::CommTime(const NetworKit::Graph& graph):
 	}))
 {}
 
+CommTime::CommTime(const CommTime& rhs):
+	graph(rhs.graph), hasrun(rhs.hasrun),
+	apsp(rhs.apsp)
+{}
+
 void CommTime::run() {
 	apsp.run();
 	hasrun = true;

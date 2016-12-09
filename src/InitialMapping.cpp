@@ -7,8 +7,16 @@ namespace StaticMapping {
 
 InitialMapping::InitialMapping(const NetworKit::Graph& cg, const NetworKit::Graph& pg):
     communicationGraph(cg), processorGraph(pg),
-    mapping(std::vector<NetworKit::index>(cg.numberOfNodes()))
+    mapping(std::vector<NetworKit::index>(cg.numberOfNodes())),
+	hasrun(false)
 {}
+
+InitialMapping::InitialMapping(const InitialMapping& rhs):
+    communicationGraph(rhs.communicationGraph),
+	processorGraph(rhs.communicationGraph),
+    mapping(rhs.mapping),
+	hasrun(rhs.hasrun)
+{}	
 
 void InitialMapping::run() {
 	assertRequirements(communicationGraph, processorGraph);
@@ -26,7 +34,10 @@ bool InitialMapping::hasRun() const {
 }
 
 CommTime InitialMapping::getCommTime() const {
-	return CommTime(processorGraph);
+	auto ct = CommTime(processorGraph);
+	if (!ct.hasRun())
+		ct.run();
+	return ct;
 }
 
 } // namespace

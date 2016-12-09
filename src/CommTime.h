@@ -17,9 +17,7 @@ public:
 				std::function<NetworKit::edgeweight(NetworKit::edgeweight)> edgeMod,
 				bool storePaths = true,
 				bool storeStack = false, NetworKit::node target = NetworKit::none);
-
 	void run() override;
-	
 private:
 	std::function<NetworKit::edgeweight(NetworKit::edgeweight)> edgeModifier;
 };
@@ -27,7 +25,6 @@ private:
 class ModAPSP: public NetworKit::APSP {
 public:
 	ModAPSP(const NetworKit::Graph&, std::function<NetworKit::edgeweight(NetworKit::edgeweight)>);
-
 	void run() override;
 private:
 	std::function<NetworKit::edgeweight(NetworKit::edgeweight)> edgeModifier;
@@ -36,6 +33,12 @@ private:
 class CommTime {
 public:
 	CommTime(const NetworKit::Graph& pg);
+	CommTime(const CommTime&);
+	CommTime(CommTime&&) = default;
+	CommTime& operator=(const CommTime&) = default;
+	CommTime& operator=(CommTime&&) = default;
+	~CommTime() = default;
+
 	void run();
 	bool hasRun() const;
 

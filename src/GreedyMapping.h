@@ -15,7 +15,13 @@ namespace StaticMapping {
 class GreedyMapping : public StaticMapping {
 public: 
     GreedyMapping(const NetworKit::Graph&, const NetworKit::Graph&);
-    void run();
+	GreedyMapping(const GreedyMapping&);
+	GreedyMapping(GreedyMapping&&) = default;
+	GreedyMapping& operator=(const GreedyMapping&) = default;
+	GreedyMapping& operator=(GreedyMapping&&) = default;
+	~GreedyMapping() = default;
+	
+	void run();
 	
 	std::vector<NetworKit::index> getMapping() const;
 	CommTime getCommTime() const;

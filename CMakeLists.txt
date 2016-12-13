@@ -42,6 +42,7 @@ set (SOURCE_FILES
   src/InitialMapping.cpp
   src/RandomMapping.cpp
   src/IOUtil.cpp
+  src/Demo.cpp
 )
 
 set (TEST_FILES

@@ -1,89 +1,12 @@
 #include <iostream>
-#include <fstream>
-#include <random>
 #include <string>
-#include <typeinfo>
 
 #include <graph/Graph.h>
 #include <io/METISGraphReader.h>
 
 #include "boost/program_options.hpp"
 
-#include "StaticMappingAlgorithm.h"
-#include "RandomMapping.h"
-#include "GreedyMapping.h"
-#include "InitialMapping.h"
-#include "Benchmark.h"
-
-
-void write_mapping(const std::vector<size_t>& mapping, std::string& path) {
-	std::ofstream stream;
-	stream.open(path);
-
-	for (size_t i = 0; i < mapping.size(); i++) {
-		stream << mapping[i] << "\n";
-	}
-	stream.close();
-}
-
-std::string prettifyAlgoName(std::string oldname) {
-	if (oldname == typeid(StaticMapping::GreedyMapping).name()) {
-		return "GreedyMapping";
-	}
-	if (oldname == typeid(StaticMapping::InitialMapping).name()) {
-		return "InitialMapping";
-	}
-	if (oldname == typeid(StaticMapping::RandomMapping).name()) {
-		return "RandomMapping";
-	}
-	return "";
-}
-
-void write_benchmark(const StaticMapping::BenchmarkResults& results,
-					 std::ofstream& stream, std::string algoName)
-{
-	stream << "\"Results_" << prettifyAlgoName(algoName) << "\": { \n";
-	stream << "    \"runtime\": " << results.runtime << ", \n";
-	stream << "    \"avgDilation\": " << results.avgDilation << ", \n";
-	stream << "    \"maxDilation\": " << results.maxDilation << ", \n";
-	stream << "    \"maxCongestion\": " << results.maxCongestion << " \n";
-	stream << "}\n";
-}
-
-inline void runAlgo(StaticMapping::StaticMapping& algo,
-					const NetworKit::Graph& cg, const NetworKit::Graph& pg,
-					bool save_mapping, std::string& mapping_fn,
-					bool save_benchmark, std::string& benchmark_fn,
-					bool verbose, bool no_benchmark,
-					std::ofstream& stream)
-{
-	if (!no_benchmark) {
-		std::cout << "[INFO]: running benchmark of " << typeid(algo).name() << std::endl;
-		StaticMapping::Benchmark bm(cg, pg, algo);
-		bm.run();
-
-		auto results = bm.getResults();
-
-		if (verbose) {
-			std::cout << "[INFO] runtime: " << results.runtime << "ms \n";
-			std::cout << "[INFO] average dilation: " << results.avgDilation << "\n";
-			std::cout << "[INFO] max dilation: " << results.maxDilation << "\n";
-			std::cout << "[INFO] max congestion: " << results.maxCongestion << "\n";
-		}
-
-		if (save_benchmark) {
-			write_benchmark(results, stream, typeid(algo).name());
-		}
-	} else {
-		std::cout << "[INFO]: running algorithm " << typeid(algo).name() << std::endl;
-		
-		algo.run();
-	}
-	std::cout << "[DONE]" << std::endl;
-	
-	if (save_mapping)
-		write_mapping(algo.getMapping(), mapping_fn);
-}
+#include "Util.h"
 
 int main(int argc, char** argv) {
 	namespace po = boost::program_options;
@@ -138,13 +61,13 @@ int main(int argc, char** argv) {
 		}
 		
 	} catch (po::error& e) {
-		std::cerr << "ERROR:" <<  e.what() << std::endl;
+		std::cerr << "[ERROR]:" <<  e.what() << std::endl;
 		std::cerr << desc << std::endl;
 		return 1;
 	}
 
 	if (!initial_flag && !greedy_flag && !random_flag) {
-		std::cerr << "ERROR: no algorithms in use" << std::endl;
+		std::cerr << "[ERROR]: no algorithms in use" << std::endl;
 		return 1;
 	}
 
@@ -153,35 +76,15 @@ int main(int argc, char** argv) {
 	NetworKit::Graph pg = reader.read(pg_filename);
 	pg.indexEdges();
 
-	std::ofstream stream;
-	stream.open(benchmark_filename);
-	
-	if (initial_flag) {
-		StaticMapping::InitialMapping algo(cg, pg);
-		runAlgo(algo,
-				cg, pg,
-				save_mapping, mapping_filename,
-				save_benchmark, benchmark_filename,
-				verbose, no_benchmark, stream);
-	}
 
-	if (random_flag) {
-		StaticMapping::RandomMapping algo(cg, pg);
-		runAlgo(algo, cg, pg,
-				save_mapping, mapping_filename,
-				save_benchmark, benchmark_filename,
-				verbose, no_benchmark, stream);
-	}
+	StaticMapping::Util::MappingRunner
+		runner(cg, pg,
+			   benchmark_filename, mapping_filename,
+			   save_mapping, save_benchmark,
+			   no_benchmark, verbose,
+			   initial_flag, random_flag, greedy_flag);
 
-	if (greedy_flag) {
-		StaticMapping::GreedyMapping algo(cg, pg);
-		runAlgo(algo, cg, pg,
-				save_mapping, mapping_filename,
-				save_benchmark, benchmark_filename,
-				verbose, no_benchmark, stream);
-	}
-
-	stream.close();
+	runner.run();
 	
 	return 0;
 }

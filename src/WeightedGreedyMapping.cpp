@@ -58,13 +58,13 @@ double fittingRating(unsigned int commNodeMemoryRequired,
 	return std::pow(delta, FITTINGPARAM);
 }
 
-void WeightedGreedyMapping::pickInitialNodes(NetworKit::node& vc0, NetworKit::node& vp0) {
+void WeightedGreedyMapping::pickInitialNodes(NetworKit::node* vc0, NetworKit::node* vp0) {
 	NetworKit::edgeweight maxCommVolume = 0;
 	for (auto& v: communicationGraph.nodes()) {
 		auto cv = totalCommVolume(communicationGraph, v);
 		if (cv > maxCommVolume) {
 			maxCommVolume = cv;
-			vc0 = v;
+			*vc0 = v;
 		}
 	}
 	// vc0 is the communication node with maximal communication volume
@@ -72,7 +72,7 @@ void WeightedGreedyMapping::pickInitialNodes(NetworKit::node& vc0, NetworKit::no
 	unsigned int maxMemRequired = *std::max(cgMemoryMap.begin(), cgMemoryMap.end());
 	unsigned int maxMemAvailable = *std::max(pgMemoryMap.begin(), pgMemoryMap.end());
 	
-	unsigned int memoryRequired = cgMemoryMap[vc0];
+	unsigned int memoryRequired = cgMemoryMap[*vc0];
 
 	double minRating = MAX_DOUBLE;
 	for (auto& v: processorGraph.nodes()) {
@@ -90,7 +90,7 @@ void WeightedGreedyMapping::pickInitialNodes(NetworKit::node& vc0, NetworKit::no
 
 		if (rating < minRating) {
 			minRating = rating;
-			vp0 = v;
+			*vp0 = v;
 		}
 	}
 }

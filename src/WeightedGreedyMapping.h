@@ -47,7 +47,7 @@ private:
 
 	bool hasrun;
 
-	void pickInitialNodes(NetworKit::node&, NetworKit::node&);
+	void pickInitialNodes(NetworKit::node*, NetworKit::node*);
 
 };
 

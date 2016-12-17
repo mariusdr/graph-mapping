@@ -71,6 +71,18 @@ void MappingRunner::runAlgorithm(StaticMapping& algo) {
 }	
 	
 void MappingRunner::run() {
+	if (verbose) {
+		std::cout << "[INFO]: Comm Graph #nodes: " << cg.numberOfNodes()
+				  << "  mem used: " << sizeof(NetworKit::node) * cg.numberOfNodes() << " byte \n"
+				  << "[INFO]: Comm Graph #edges: " << cg.numberOfEdges()
+				  << "  mem used: " << sizeof(cg.edges()[0]) * cg.numberOfEdges() << " byte \n";
+
+		std::cout << "[INFO]: Proc Graph #nodes: " << pg.numberOfNodes()
+				  << "  mem used: " << sizeof(NetworKit::node) * pg.numberOfNodes() << " byte \n"
+				  << "[INFO]: Proc Graph #edges: " << cg.numberOfEdges()
+				  << "  mem used: " << sizeof(pg.edges()[0]) * pg.numberOfEdges() << " byte \n";
+	}
+	
 	if (useInitialMapping) {
 		infolog("[INFO]: Running InitialMapping");
 		InitialMapping algo(cg, pg);
@@ -91,6 +103,12 @@ void MappingRunner::run() {
 		runAlgorithm(algo);
 		infolog("[DONE]");
 	}
+
+	if (saveMapping)
+		mappingWriter.write();
+
+	if (saveBenchmark)
+		benchmarkWriter.write();
 }	
 	
 

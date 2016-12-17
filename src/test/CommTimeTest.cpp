@@ -48,6 +48,8 @@ TEST_F(ModDijsktraTest, test1) {
 	}
 }
 
+//-----------------------------------------------------------------------//
+
 void ModAPSPTest::SetUp() {
 	graph = NetworKit::Graph(5, true, true);
 
@@ -75,4 +77,110 @@ TEST_F(ModAPSPTest, sanityCheck) {
 	}
 }
 
+//-----------------------------------------------------------------------//
 
+void CommTimeTest1::SetUp() {
+	graph = NetworKit::Graph(3, true, false);
+
+	graph.addEdge(0, 1, 2);
+	graph.addEdge(0, 2, 1);
+	graph.addEdge(1, 2, 3);
+
+	/* simple triangle graph
+	 *        2 
+	 *     A_____B
+     *     \     /
+	 *    1 \   / 3
+	 *       \ /
+	 *        C
+	 *
+	 * expected outcome:
+	 *     time_on_path(A,B) = 1/2 
+	 *     time_on_path(B,C) = 1/3
+	 *     time_on_path(A,C) = 1/2 + 1/3
+	 */
+}
+
+TEST_F(CommTimeTest1, SimpleTriangleTest) {
+	StaticMapping::CommTime ct(graph);
+	ct.run();
+
+	EXPECT_DOUBLE_EQ(ct.time(0, 2), (1.0 / 2.0) + (1.0 / 3.0));
+	EXPECT_DOUBLE_EQ(ct.time(0, 1), (1.0 / 2.0));
+	EXPECT_DOUBLE_EQ(ct.time(1, 2), (1.0 / 3.0));
+}
+
+void CommTimeTest2::SetUp() {
+	graph = NetworKit::Graph(4, true, false);
+
+	graph.addEdge(0, 1, 2);
+	graph.addEdge(0, 2, 1);
+	graph.addEdge(1, 3, 3);
+	graph.addEdge(2, 3, 3);
+
+	/* simple rectangle graph
+	 *      2
+	 * A----------B 
+	 * |          |
+	 * |1         |3
+	 * |          |
+	 * C----------D 
+	 *      3 
+	 * expected outcome:
+	 *     time_on_path(A, B) = 1/2
+	 *     time_on_path(B, D) = 1/3
+	 *     time_on_path(C, D) = 1/3
+	 *     time_on_path(A, C) = 1 
+	 *     time_on_path(A, D) = 1/2 + 1/3
+	 *     time_on_path(B, C) = 1/3 + 1/3
+	 */
+}
+
+TEST_F(CommTimeTest2, SimpleRectangleTest) {
+	StaticMapping::CommTime ct(graph);
+	ct.run();
+
+	EXPECT_DOUBLE_EQ(ct.time(0, 1), 1.0/2.0);
+	EXPECT_DOUBLE_EQ(ct.time(1, 3), 1.0/3.0);
+	EXPECT_DOUBLE_EQ(ct.time(2, 3), 1.0/3.0);
+	EXPECT_DOUBLE_EQ(ct.time(0, 3), (1.0/2.0) + (1.0/3.0));
+	EXPECT_DOUBLE_EQ(ct.time(1, 2), 2.0/3.0);
+}
+
+void CommTimeTest3::SetUp() {
+	graph = NetworKit::Graph(4, true, false);
+
+	graph.addEdge(0, 1, 2);
+	graph.addEdge(0, 2, 5);
+	graph.addEdge(0, 3, 1);
+
+	graph.addEdge(1, 3, 4);
+	graph.addEdge(1, 2, 3);
+
+	graph.addEdge(2, 3, 4);
+	
+	/* connected rectangle graph
+	 *   2 
+	 * A----B
+	 * |\1 /|
+	 *5| \/ |4
+	 * | /\ |
+	 * |/3 \|
+	 * C----D
+	 *   4
+	 */
+}
+
+TEST_F(CommTimeTest3, ConnectedRectangleTest) {
+	StaticMapping::CommTime ct(graph);
+	ct.run();
+
+	EXPECT_DOUBLE_EQ(ct.time(0, 1), 1.0/2.0);
+	EXPECT_DOUBLE_EQ(ct.time(0, 2), 1.0/5.0);
+	EXPECT_DOUBLE_EQ(ct.time(0, 3), 1.0/5.0 + 1.0/4.0);
+
+	EXPECT_DOUBLE_EQ(ct.time(1, 3), 1.0/4.0);
+	EXPECT_DOUBLE_EQ(ct.time(1, 2), 1.0/3.0);
+
+	EXPECT_DOUBLE_EQ(ct.time(2, 3), 1.0/4.0);
+}

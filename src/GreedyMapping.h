@@ -7,7 +7,6 @@
 #include <graph/Graph.h>
 
 #include <vector>
-#include <limits>
 
 namespace StaticMapping {
 
@@ -34,12 +33,14 @@ private:
 
 	CommTime commTimes;
 	
-    std::vector<int> sum_c;
-    std::vector<int> sum_p;
+    std::vector<double> sum_c;
+    std::vector<double> sum_p;
 
 	std::vector<NetworKit::index> mapping;
 
 	bool hasrun;
+
+	void pickInitialNodes(NetworKit::node*, NetworKit::node*);
 };
 
 } // namespace

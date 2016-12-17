@@ -8,13 +8,22 @@
 #include "../GreedyMapping.h"
 
 
-class GreedyMappingTest : public ::testing::Test {
+class GreedyMappingTest1 : public ::testing::Test {
 public:
 	void SetUp();
 	
 protected:
 	NetworKit::Graph communicationGraph;
 	NetworKit::Graph processorGraph;
+};
+
+class GreedyMappingTest2 : public ::testing::Test {
+public:
+	void SetUp();
+	
+protected:
+	NetworKit::Graph cg;
+	NetworKit::Graph pg;
 };
 
 #endif

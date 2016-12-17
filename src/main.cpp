@@ -6,7 +6,7 @@
 
 #include "boost/program_options.hpp"
 
-#include "Util.h"
+#include "Demo.h"
 
 int main(int argc, char** argv) {
 	namespace po = boost::program_options;
@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
 	bool random_flag = false;
 	
 	std::string cg_filename("none"), pg_filename("none");
-	std::string benchmark_filename("none"), mapping_filename("none");
+	std::string benchmark_filename("benchmark.txt"), mapping_filename("mapping.txt");
 
 	bool save_mapping = false;
 	bool save_benchmark = false;
@@ -75,7 +75,6 @@ int main(int argc, char** argv) {
 	NetworKit::Graph cg = reader.read(cg_filename);
 	NetworKit::Graph pg = reader.read(pg_filename);
 	pg.indexEdges();
-
 
 	StaticMapping::Util::MappingRunner
 		runner(cg, pg,

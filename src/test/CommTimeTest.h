@@ -21,6 +21,26 @@ public:
 	NetworKit::Graph graph;
 };
 
+class CommTimeTest1 : public ::testing::Test {
+protected:
+	virtual void SetUp();
+public:
+	NetworKit::Graph graph;
+};
+
+class CommTimeTest2 : public ::testing::Test {
+protected:
+	virtual void SetUp();
+public:
+	NetworKit::Graph graph;
+};
+
+class CommTimeTest3 : public ::testing::Test {
+protected:
+	virtual void SetUp();
+public:
+	NetworKit::Graph graph;
+};
 
 #endif
 

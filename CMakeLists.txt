@@ -43,14 +43,17 @@ set (SOURCE_FILES
   src/RandomMapping.cpp
   src/IOUtil.cpp
   src/Demo.cpp
+  src/WeightedGreedyMapping.cpp
 )
 
 set (TEST_FILES
   src/CommTime.cpp
   src/GreedyMapping.cpp
+  src/WeightedGreedyMapping.cpp
   src/test/test.cpp
   src/test/CommTimeTest.cpp
   src/test/GreedyMappingTest.cpp
+  src/test/WeightedGreedyMappingTest.cpp
 )
 
 add_executable(computeMapping ${SOURCE_FILES})

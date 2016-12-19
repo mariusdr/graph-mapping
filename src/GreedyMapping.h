@@ -41,6 +41,9 @@ private:
 	bool hasrun;
 
 	void pickInitialNodes(NetworKit::node*, NetworKit::node*);
+
+	NetworKit::node pickNextCommNode(NetworKit::node&);
+	NetworKit::node pickNextProcNode(NetworKit::node&);
 };
 
 } // namespace

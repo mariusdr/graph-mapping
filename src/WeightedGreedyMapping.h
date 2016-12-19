@@ -35,25 +35,40 @@ private:
 	const NetworKit::Graph& communicationGraph;
 	const NetworKit::Graph& processorGraph;
 
+	const size_t numberOfNodes;
+	
 	const std::vector<unsigned int>& cgMemoryMap;
 	const std::vector<unsigned int>& pgMemoryMap;
 	
 	CommTime commTimes;
 
-	std::vector<int> sum_c;
-	std::vector<int> sum_p;
+	std::vector<double> sum_c;
+	std::vector<double> sum_p;
 
 	std::vector<NetworKit::index> mapping;
+	std::vector<NetworKit::index> invmapping;
+	
+	std::vector<bool> isMapped;
 
+	size_t numberOfMappedNodes;
+	
 	bool hasrun;
 
+	void setMapping(NetworKit::node, NetworKit::node);
+
+	void removeCommNodeMapping(NetworKit::node);
+	void removeProcNodeMapping(NetworKit::node);
+	
 	void pickInitialNodes(NetworKit::node*, NetworKit::node*);
 
+	NetworKit::node findReplacement(NetworKit::node);
+	
+	NetworKit::node pickNextCommNode(NetworKit::node);
+	NetworKit::node pickNextProcNode(NetworKit::node, bool*);
+
+protected:
+	void assertRequirements(const NetworKit::Graph&, const NetworKit::Graph&) override;
 };
-
-
-
-
 
 
 } // namespace

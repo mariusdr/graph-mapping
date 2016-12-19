@@ -70,32 +70,55 @@ void GreedyMapping::pickInitialNodes(NetworKit::node* vc0, NetworKit::node* vp0)
 	LOG("Choose vc0 = " << *vc0 << " and vp0 = " << *vp0);
 }
 
-inline NetworKit::node pickMaxNode(const std::vector<double>& sum) {
-	NetworKit::node max_node = 0;
-	int max_val = -1.0;
+NetworKit::node GreedyMapping::pickNextCommNode(NetworKit::node& vci) {
+	for (auto w: communicationGraph.neighbors(vci)) {
+		if (sum_c[w] > -1.0) {
+			// w is not assigned
+			sum_c[w] += communicationGraph.weight(vci, w);
+		}	
+	}
 
-	for (size_t i = 0; i < sum.size(); i++) {
-		if (sum[i] > max_val) {
-			max_val = sum[i];
-			max_node = i;
+	NetworKit::node vci_next = 0;
+	double max_val = -1.0;
+	for (size_t i = 0; i < sum_c.size(); ++i) {
+		if (sum_c[i] > max_val) {
+			max_val = sum_c[i];
+			vci_next = i;
 		}
 	}
-	return max_node;
+	return vci_next;
 }
 
-inline NetworKit::node pickMinNode(const std::vector<double>& sum) {
-	NetworKit::node min_node = 0;
-	int min_val = MAX_DOUBLE;
+NetworKit::node GreedyMapping::pickNextProcNode(NetworKit::node& vci_next) {
+	NetworKit::node vpi_next = 0;
+    #pragma omp parallel for
+	for (size_t j = 0; j < processorGraph.numberOfNodes(); ++j) {
+		if (sum_p[j] < MAX_DOUBLE) {
+			// j is not assigned
+			sum_p[j] = 0;
 
-	for (size_t i = 0; i < sum.size(); i++) {
-		if (sum[i] < min_val) {
-			min_val = sum[i];
-			min_node = i;
+			for (auto w: communicationGraph.neighbors(vci_next)) {
+				if (sum_c[w] < 0) {
+					// w has already been assigned
+					double weight = communicationGraph.weight(vci_next, w);
+					double time = commTimes.time(j, mapping[w]); 
+
+					sum_p[j] += weight * time;
+				}
+			}
 		}
 	}
-	return min_node;
+
+	double min_val = MAX_DOUBLE;
+	for (size_t i = 0; i < sum_p.size(); ++i) {
+		if (sum_p[i] < min_val) {
+			min_val = sum_p[i];
+			vpi_next = i;
+		}
+	}
+	return vpi_next;
 }
-	
+
 void GreedyMapping::run() { 
 	assertRequirements(communicationGraph, processorGraph);
 
@@ -117,32 +140,8 @@ void GreedyMapping::run() {
 		sum_c[vci] = -1.0;
 		sum_p[vpi] = MAX_DOUBLE;
 
-		for (auto w: communicationGraph.neighbors(vci)) {
-			if (sum_c[w] > -1.0) {
-				// w is not assigned
-				sum_c[w] += communicationGraph.weight(vci, w);
-			}	
-		}
-		NetworKit::node vci_next = pickMaxNode(sum_c);
-
-		#pragma omp parallel for
-		for (size_t j = 0; j < processorGraph.numberOfNodes(); ++j) {
-			if (sum_p[j] < MAX_DOUBLE) {
-				// j is not assigned
-				sum_p[j] = 0;
-
-				for (auto w: communicationGraph.neighbors(vci_next)) {
-					if (sum_c[w] < 0) {
-						// w has already been assigned
-						double weight = communicationGraph.weight(vci_next, w);
-						double time = commTimes.time(j, mapping[w]); 
-
-						sum_p[j] += weight * time;
-					}
-				}
-			}
-		}
-		NetworKit::node vpi_next = pickMinNode(sum_p);
+		NetworKit::node vci_next = pickNextCommNode(vci);
+		NetworKit::node vpi_next = pickNextProcNode(vci_next);
 		
 		// set mapping 
 		mapping[vci_next] = vpi_next;
@@ -150,12 +149,10 @@ void GreedyMapping::run() {
 		LOG("Map CommNode " << vci_next << " -> ProcessorNode " << vpi_next
 			<< " || " << "sum_c = " << sum_c[vci_next] << " ; sum_p = " << sum_p[vpi_next]);
 
-		//assert(sum_c[vci_next] == *std::max_element(sum_c.begin(), sum_c.end()));
-		//assert(sum_p[vpi_next] == *std::min_element(sum_p.begin(), sum_p.end()));
-
 		vci = vci_next;
 		vpi = vpi_next;
 	}
+
 	hasrun = true;
 }
 

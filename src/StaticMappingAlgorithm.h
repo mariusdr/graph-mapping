@@ -21,9 +21,10 @@ public:
 	virtual CommTime getCommTime() const = 0;
 
 	virtual bool hasRun() const = 0;
+
 protected:
 
-	void assertRequirements(const NetworKit::Graph& cg, const NetworKit::Graph& pg) {
+	virtual void assertRequirements(const NetworKit::Graph& cg, const NetworKit::Graph& pg) {
 		if (cg.numberOfNodes() != pg.numberOfNodes()) 
 			throw std::runtime_error("#nodes of processorGraph != #nodes of communicationGraph");
 		if (cg.isDirected() || pg.isDirected()) 

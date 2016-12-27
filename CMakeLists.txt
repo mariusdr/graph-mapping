@@ -35,14 +35,13 @@ include_directories(${Boost_INCLUDE_DIRS})
 message(STATUS "COMPILE COMMAND: ${CMAKE_CXX_FLAGS}")
 
 set (SOURCE_FILES
-  src/main.cpp
+  src/App.cpp
   src/CommTime.cpp
   src/GreedyMapping.cpp
   src/Benchmark.cpp
   src/InitialMapping.cpp
   src/RandomMapping.cpp
   src/IOUtil.cpp
-  src/Demo.cpp
   src/WeightedGreedyMapping.cpp
 )
 

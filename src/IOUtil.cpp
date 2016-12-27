@@ -8,7 +8,7 @@
 #include "GreedyMapping.h"
 #include "InitialMapping.h"
 #include "RandomMapping.h"
-
+#include "WeightedGreedyMapping.h"
 
 namespace StaticMapping {
 namespace Util {
@@ -47,6 +47,9 @@ std::string prettifyAlgoName(std::string oldname) {
 	}
 	if (oldname == typeid(RandomMapping).name()) {
 		return "RandomMapping";
+	}
+	if (oldname == typeid(WeightedGreedyMapping).name()) {
+		return "WeightedGreedyMapping";
 	}
 	throw std::runtime_error("cant lookup algo name:" + oldname);
 }

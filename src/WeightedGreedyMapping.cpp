@@ -5,7 +5,7 @@
 #include <tuple>
 #include <string>
 
-#define NOLOG 0
+#define NOLOG 1
 #include "Log.h"
 
 namespace StaticMapping {
@@ -29,6 +29,7 @@ WeightedGreedyMapping::WeightedGreedyMapping(const NetworKit::Graph& cg,
 	mapping(std::vector<NetworKit::index>(numberOfNodes, 0)),
 	invmapping(std::vector<NetworKit::index>(numberOfNodes, 0)),
 	isMapped(std::vector<bool>(numberOfNodes, false)),
+	invIsMapped(std::vector<bool>(numberOfNodes, false)),
 	numberOfMappedNodes(0),
 	hasrun(false)
 {}
@@ -90,38 +91,33 @@ NetworKit::node WeightedGreedyMapping::pickNextProcNode(NetworKit::node vci_next
 	*nodeAvailable = false;
 
     #pragma omp parallel for
-	for (size_t j = 0; j < processorGraph.numberOfNodes(); ++j) {
-		if (sum_p[j] < MAX_DOUBLE) {
+	for (NetworKit::node vpi_candidate = 0; vpi_candidate < numberOfNodes; ++vpi_candidate) {
+		if (sum_p[vpi_candidate] < MAX_DOUBLE) {
 			// j is not assigned
-			sum_p[j] = 0;
+			sum_p[vpi_candidate] = 0;
 
 			for (auto w: communicationGraph.neighbors(vci_next)) {
 				if (sum_c[w] < 0) {
 					// w has already been assigned
 					double weight = communicationGraph.weight(vci_next, w);
-					double time = commTimes.time(j, mapping[w]); 
+					double time = commTimes.time(vpi_candidate, mapping[w]); 
 
-					sum_p[j] += weight * time;
+					sum_p[vpi_candidate] += weight * time;
 				}
 			}
 
 			unsigned int memoryNeeded = cgMemoryMap[vci_next];
-			unsigned int memoryAvailable = pgMemoryMap[j];
+			unsigned int memoryAvailable = pgMemoryMap[vpi_candidate];
 
 			if (memoryNeeded > memoryAvailable) {
 				// can't use this processor node
-				sum_p[j] = MAX_DOUBLE * 0.99; // TODO: fix this insane shit
+				sum_p[vpi_candidate] = MAX_DOUBLE * 0.99; // TODO: fix this insane shit
 			} else {
 				// fitting processor node exists
 				*nodeAvailable = true;
-				
-				// rating(a, n) = (a-n)^2
-				// rating = 0 <=> a == n
-				// a - n small => (a - n)^2 --> 0
 
-				double rating = std::pow(memoryAvailable - memoryNeeded, 2);
-
-				sum_p[j] = (1 + rating) * sum_p[j];
+				double rating = computeRating(vci_next, vpi_candidate);
+				sum_p[vpi_candidate] = (1 + rating) * sum_p[vpi_candidate];
 			}
 		}
 	}
@@ -134,6 +130,18 @@ NetworKit::node WeightedGreedyMapping::pickNextProcNode(NetworKit::node vci_next
 		}
 	}
 	return vpi_next;
+}
+
+double WeightedGreedyMapping::computeRating(NetworKit::node vc, NetworKit::node vp) {
+	// rating(a, n) = (a-n)^2
+	// rating = 0 <=> a == n
+	// a - n small => (a - n)^2 --> 0
+
+	auto memoryAvailable = pgMemoryMap[vp];
+	auto memoryNeeded = cgMemoryMap[vc];
+	
+	double rating = std::pow(memoryAvailable - memoryNeeded, 2);
+	return rating;
 }
 
 NetworKit::node WeightedGreedyMapping::findReplacement(NetworKit::node vci_next) {
@@ -204,6 +212,7 @@ void WeightedGreedyMapping::run() {
 		vci = vci_next;
 		vpi = vpi_next;
 	}
+
 	hasrun = true;
 }
 
@@ -211,26 +220,28 @@ void WeightedGreedyMapping::setMapping(NetworKit::node vc, NetworKit::node vp) {
 	mapping[vc] = vp;
 	invmapping[vp] = vc;
 	isMapped[vc] = true;
+	invIsMapped[vp] = true;
 	++numberOfMappedNodes;
 }
 
 void WeightedGreedyMapping::removeCommNodeMapping(NetworKit::node vc) {
 	if (isMapped[vc]) {
 		auto vp = mapping[vc];
-	
 		mapping[vc] = 0;
 		invmapping[vp] = 0;
 		isMapped[vc] = false;
+		invIsMapped[vp] = false;
 		--numberOfMappedNodes;
 	}
 }
 
 void WeightedGreedyMapping::removeProcNodeMapping(NetworKit::node vp) {
-	auto vc = invmapping[vp];
-	if (isMapped[vc]) {
+	if (invIsMapped[vp]) {
+		auto vc = invmapping[vp];
 		mapping[vc] = 0;
 		invmapping[vp] = 0;
 		isMapped[vc] = false;
+		invIsMapped[vp] = false;
 		--numberOfMappedNodes;
 	}
 }

@@ -25,11 +25,11 @@ public:
 	
 	~WeightedGreedyMapping() = default;
 
-	void run();
+	void run() override;
 	
-	std::vector<NetworKit::index> getMapping() const;
-	CommTime getCommTime() const;
-	bool hasRun() const;
+	std::vector<NetworKit::index> getMapping() const override;
+	CommTime getCommTime() const override;
+	bool hasRun() const override;
 	
 private:
 	const NetworKit::Graph& communicationGraph;
@@ -49,6 +49,7 @@ private:
 	std::vector<NetworKit::index> invmapping;
 	
 	std::vector<bool> isMapped;
+	std::vector<bool> invIsMapped;
 
 	size_t numberOfMappedNodes;
 	
@@ -66,6 +67,8 @@ private:
 	NetworKit::node pickNextCommNode(NetworKit::node);
 	NetworKit::node pickNextProcNode(NetworKit::node, bool*);
 
+	double computeRating(NetworKit::node, NetworKit::node);
+	
 protected:
 	void assertRequirements(const NetworKit::Graph&, const NetworKit::Graph&) override;
 };
